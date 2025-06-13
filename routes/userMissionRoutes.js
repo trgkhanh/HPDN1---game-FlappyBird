@@ -1,10 +1,20 @@
 const express = require("express");
-const router = express.Router();
+const cors = require("cors");
+
 const userMissionController = require("../controllers/userMissionController");
 
-router.get("/:userId", userMissionController.getUserMissions);
-router.post("/update", userMissionController.updateProgress);
-router.post("/claim", userMissionController.claimReward);
-router.post("/create", userMissionController.createUserMission);
+const appp = express();
 
-module.exports = router;
+appp.use(cors());
+appp.use(express.json());
+
+appp.get("/:userId", userMissionController.getUserMissions);
+
+appp.post("/update", userMissionController.editUserMissionProgress);
+
+appp.post("/claim", userMissionController.claimReward);
+
+appp.post("/create", userMissionController.createUserMission);
+
+
+module.exports = appp;

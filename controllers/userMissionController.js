@@ -13,19 +13,6 @@ module.exports = {
     });
   },
 
-  updateProgress: (req, res) => {
-    const { userId, missionId, progress } = req.body;
-    userMissionModel.updateProgress(userId, missionId, progress, (err) => {
-      if (err) {
-        console.error("Lỗi khi cập nhật tiến trình:", err);
-        return res
-          .status(500)
-          .json({ error: "Không thể cập nhật tiến trình nhiệm vụ" });
-      }
-      res.json({ message: "Tiến trình nhiệm vụ được cập nhật thành công" });
-    });
-  },
-
   claimReward: (req, res) => {
     const { userId, missionId } = req.body;
     userMissionModel.claimReward(userId, missionId, (err, reward) => {
@@ -43,13 +30,30 @@ module.exports = {
   },
 
   createUserMission: (req, res) => {
-    const { userId, missionId } = req.body;
-    userMissionModel.createUserMission(userId, missionId, (err) => {
+    const { userId, missionId, target } = req.body;
+    userMissionModel.createUserMission(userId, missionId, target, (err) => {
       if (err) {
         console.error("Lỗi khi tạo user mission:", err);
         return res.status(500).json({ error: "Không thể tạo user mission" });
       }
       res.status(201).json({ message: "User mission được tạo thành công" });
+    });
+  },
+
+  editUserMissionProgress: (req, res) => {
+    const { user_id, mission_id } = req.body;
+    if (!user_id || !mission_id) {
+      return res.status(400).json({ error: "Thiếu thông tin userId hoặc missionId" });
+    }
+    userMissionModel.updateUserMissionProgress(user_id, mission_id, (err, totalScore) => {
+      if (err) {
+        console.error("Lỗi khi cập nhật tiến trình user mission:", err);
+        return res.status(500).json({ error: "Không thể cập nhật tiến trình" });
+      }
+      res.json({ 
+        message: "Tiến trình user mission đã được cập nhật thành công",
+        progress: totalScore
+      });
     });
   },
 };

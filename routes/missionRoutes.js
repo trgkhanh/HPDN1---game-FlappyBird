@@ -1,9 +1,17 @@
 const express = require("express");
-const router = express.Router();
+const cors = require("cors");
+
 const missionController = require("../controllers/missionController");
 
-router.post("/create", missionController.createMission);
-router.get("/", missionController.getAllMissions);
-router.get("/:id", missionController.getMissionById);
+const app = express();
 
-module.exports = router;
+app.use(cors());
+app.use(express.json());
+
+app.post("/create", missionController.createMission);
+
+app.get("/", missionController.getAllMissions);
+
+app.get("/:id", missionController.getMissionById);
+
+module.exports = app;

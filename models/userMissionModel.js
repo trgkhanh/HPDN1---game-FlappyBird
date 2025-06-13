@@ -1,10 +1,11 @@
 const db = require("../config/db");
 
 module.exports = {
-  createUserMission: (userId, missionId, callback) => {
+  // Tạo bảng missions cho user nếu chưa tồn tại
+  createUserMission: (userId, missionId, target, callback) => {
     db.execute(
-      "INSERT INTO user_missions (user_id, mission_id, progress, completed, claimed) VALUES (?, ?, 0, FALSE, FALSE)",
-      [userId, missionId],
+      `INSERT INTO user_missions (user_id, mission_id, progress, completed, claimed, target) VALUES (?, ?, 0, FALSE, FALSE, ?)`,
+      [userId, missionId, target],
       (err) => {
         if (err) {
           console.error("Lỗi khi tạo user mission:", err);
@@ -32,57 +33,51 @@ module.exports = {
     );
   },
 
-  updateProgress: (userId, missionId, progress, callback) => {
+  updateUserMissionProgress: (user_id, mission_id, cb) => {
+    if (user_id === undefined || mission_id === undefined) {
+      return cb(new Error("userId hoặc missionId bị undefined"));
+    }
+    // Lấy thời gian tạo mission cho user
     db.execute(
-      `SELECT * FROM user_missions WHERE user_id = ? AND mission_id = ?`,
-      [userId, missionId],
-      (err, userMission) => {
-        if (err) {
-          console.error("Lỗi khi lấy user mission:", err);
-          return callback(err);
+      "SELECT completed_at FROM user_missions WHERE user_id = ? AND mission_id = ?",
+      [user_id, mission_id],
+      (err, rows) => {
+        if (err || !rows.length) {
+          console.error("Lỗi khi lấy thời gian tạo mission:", err);
+          return cb(err || new Error("Không tìm thấy user_mission"));
         }
+        const createdAt = rows[0].completed_at;
 
-        if (userMission.length > 0) {
-          const userMissionData = userMission[0];
-          let updatedProgress = progress;
-          let completed = userMissionData.completed;
-
-          db.execute(
-            `SELECT target FROM missions WHERE id = ?`,
-            [missionId],
-            (err, mission) => {
-              if (err) {
-                console.error("Lỗi khi lấy mission target:", err);
-                return callback(err);
-              }
-              const target = mission[0].target;
-              if (updatedProgress >= target && !completed) {
-                completed = true;
-              }
-
-              db.execute(
-                `UPDATE user_missions 
-                 SET progress = ?, completed = ?
-                 WHERE user_id = ? AND mission_id = ?`,
-                [updatedProgress, completed, userId, missionId],
-                (err) => {
-                  if (err) {
-                    console.error("Lỗi khi cập nhật tiến trình:", err);
-                    return callback(err);
-                  }
-                  callback(null);
-                }
-              );
+        // Tính tổng điểm từ thời gian tạo mission
+        db.execute(
+          "SELECT SUM(score) AS totalScore FROM scores WHERE telegram_id = ? AND created_at >= ?",
+          [user_id, createdAt],
+          (err, scoreRows) => {
+            if (err) {
+              console.error("Lỗi khi tính tổng điểm:", err);
+              return cb(err);
             }
-          );
-        } else {
-          callback(null); // Không tìm thấy user mission, coi như thành công
-        }
+            const totalScore = scoreRows[0].totalScore || 0;
+
+            // Cập nhật progress
+            db.execute(
+              "UPDATE user_missions SET progress = ? WHERE user_id = ? AND mission_id = ?",
+              [totalScore, user_id, mission_id],
+              (err) => {
+                if (err) {
+                  console.error("Lỗi khi cập nhật progress:", err);
+                  return cb(err);
+                }
+                cb(null, totalScore);
+              }
+            );
+          }
+        );
       }
     );
   },
 
-  claimReward: (userId, missionId, callback) => {
+  claimReward: (userId, missionId, cb) => {
     db.execute(
       `SELECT um.completed, um.claimed, m.reward_gold FROM user_missions um
        JOIN missions m ON um.mission_id = m.id
@@ -91,7 +86,7 @@ module.exports = {
       (err, userMission) => {
         if (err) {
           console.error("Lỗi khi lấy user mission:", err);
-          return callback(err);
+          return cb(err);
         }
 
         if (userMission.length > 0) {
@@ -103,16 +98,16 @@ module.exports = {
               (err) => {
                 if (err) {
                   console.error("Lỗi khi cập nhật claimed:", err);
-                  return callback(err);
+                  return cb(err);
                 }
-                callback(null, userMissionData.reward_gold);
+                cb(null, userMissionData.reward_gold);
               }
             );
           } else {
-            callback(new Error("Nhiệm vụ chưa hoàn thành hoặc đã nhận thưởng"));
+            cb(new Error("Nhiệm vụ chưa hoàn thành hoặc đã nhận thưởng"));
           }
         } else {
-          callback(new Error("Không tìm thấy User Mission"));
+          cb(new Error("Không tìm thấy User Mission"));
         }
       }
     );

@@ -21,12 +21,12 @@ app.use("/scores", scoreRoutes); // Điểm số
 
 // Route mặc định
 app.get("/", (req, res) => {
-  res.send("🎮 API Game Bắn Gà đã sẵn sàng!");
+  res.send("🎮 API Game đã sẵn sàng!");
 });
 
 // Xử lý route không tồn tại
 app.use((req, res) => {
-  res.status(404).json({ error: "Không tìm thấy đường dẫn này." });
+  res.status(404).json({ error: "Không tìm thấy đường dẫn" });
 });
 
 // Xử lý lỗi hệ thống
