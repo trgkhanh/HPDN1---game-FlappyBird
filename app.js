@@ -16,7 +16,7 @@ app.use(express.json()); // Dùng express.json() thay body-parser
 // Routes
 app.use("/missions", missionRoutes); // Nhiệm vụ chung
 app.use("/user-missions", userMissionRoutes); // Nhiệm vụ của người dùng
-app.use("/users", userRoutes); // Người dùng (qua Telegram)
+app.use("/users", userRoutes);
 app.use("/scores", scoreRoutes); // Điểm số
 
 // Route mặc định

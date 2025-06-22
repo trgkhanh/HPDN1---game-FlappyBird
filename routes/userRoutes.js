@@ -1,14 +1,32 @@
 const express = require("express");
-const router = express.Router();
-const userController = require("../controllers/userController.js");
+const cors = require("cors");
 
-//  BỎ ROUTE NÀY HOẶC COMMENT NẾU KHÔNG DÙNG NỮA
-// router.post("/auth/telegram", userController.authTelegramUser);
+const userController = require("../controllers/userController");
+
+const app = express.Router();
+
+app.use(cors());
+app.use(express.json());
 
 // Lấy thông tin người dùng theo telegram_id
-router.get("/:id", userController.getUserById);
+app.get("/:id", userController.getUserById);
 
 // Lấy tất cả người dùng
-router.get("/", userController.getAllUsers);
+app.get("/", userController.getAllUsers);
 
-module.exports = router;
+// Đăng ký user mới
+app.post("/register", userController.registerUser);
+
+// // Đăng nhập
+// app.post("/login", userController.loginUser);
+
+// // Lấy tất cả user
+// app.get("/", userController.getAllUsers);
+
+// // Cập nhật user
+// app.put("/:telegram_id", userController.updateUser);
+
+// // Xoá user
+// app.delete("/:telegram_id", userController.deleteUser);
+
+module.exports = app;
