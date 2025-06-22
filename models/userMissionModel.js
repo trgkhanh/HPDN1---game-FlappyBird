@@ -77,38 +77,50 @@ module.exports = {
     );
   },
 
-  claimReward: (userId, missionId, cb) => {
+  claimReward: (user_id, mission_id, cb) => {
     db.execute(
-      `SELECT um.completed, um.claimed, m.reward_gold FROM user_missions um
-       JOIN missions m ON um.mission_id = m.id
-       WHERE um.user_id = ? AND um.mission_id = ?`,
-      [userId, missionId],
+      `SELECT um.completed, um.claimed, m.reward_gold 
+     FROM user_missions um
+     JOIN missions m ON um.mission_id = m.id
+     WHERE um.user_id = ? AND um.mission_id = ?`,
+      [user_id, mission_id],
       (err, userMission) => {
         if (err) {
           console.error("Lỗi khi lấy user mission:", err);
           return cb(err);
         }
-
-        if (userMission.length > 0) {
-          const userMissionData = userMission[0];
-          if (userMissionData.completed && !userMissionData.claimed) {
+        if (!userMission || userMission.length === 0) {
+          return cb(new Error("Không tìm thấy User Mission"));
+        }
+        const { completed, claimed, reward_gold } = userMission[0];
+        if (!completed) {
+          return cb(new Error("Nhiệm vụ chưa hoàn thành"));
+        }
+        if (claimed) {
+          return cb(new Error("Phần thưởng đã được nhận"));
+        }
+        // Cập nhật claimed và cộng vàng cho user
+        db.execute(
+          `UPDATE user_missions SET claimed = 1 WHERE user_id = ? AND mission_id = ?`,
+          [user_id, mission_id],
+          (err) => {
+            if (err) {
+              console.error("Lỗi khi cập nhật claimed:", err);
+              return cb(err);
+            }
             db.execute(
-              `UPDATE user_missions SET claimed = TRUE WHERE user_id = ? AND mission_id = ?`,
-              [userId, missionId],
+              `UPDATE users SET gold = gold + ? WHERE telegram_id = ?`,
+              [reward_gold, user_id],
               (err) => {
                 if (err) {
-                  console.error("Lỗi khi cập nhật claimed:", err);
+                  console.error("Lỗi khi cộng vàng:", err);
                   return cb(err);
                 }
-                cb(null, userMissionData.reward_gold);
+                cb(null, { success: true, reward_gold });
               }
             );
-          } else {
-            cb(new Error("Nhiệm vụ chưa hoàn thành hoặc đã nhận thưởng"));
           }
-        } else {
-          cb(new Error("Không tìm thấy User Mission"));
-        }
+        );
       }
     );
   },

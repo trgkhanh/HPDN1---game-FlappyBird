@@ -12,7 +12,7 @@ appp.get("/:userId", userMissionController.getUserMissions);
 
 appp.post("/update", userMissionController.editUserMissionProgress);
 
-appp.post("/claim", userMissionController.claimReward);
+appp.post("/claim", userMissionController.claimRewardUser);
 
 appp.post("/create", userMissionController.createUserMission);
 

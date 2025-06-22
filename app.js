@@ -31,8 +31,8 @@ app.use((req, res) => {
 
 // Xử lý lỗi hệ thống
 app.use((err, req, res, next) => {
-  console.error("Lỗi hệ thống:", err.stack);
-  res.status(500).json({ error: "Đã xảy ra lỗi trên server." });
+  console.error("Lỗi hệ thống:11", err.stack);
+  res.status(500).json({ error: "Đã xảy ra lỗi trên server.111" });
 });
 
 // Khởi động server

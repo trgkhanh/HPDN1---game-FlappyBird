@@ -17,8 +17,8 @@ app.get("/", userController.getAllUsers);
 // Đăng ký user mới
 app.post("/register", userController.registerUser);
 
-// // Đăng nhập
-// app.post("/login", userController.loginUser);
+// Đăng nhập
+app.post("/login", userController.loginUser);
 
 // // Lấy tất cả user
 // app.get("/", userController.getAllUsers);

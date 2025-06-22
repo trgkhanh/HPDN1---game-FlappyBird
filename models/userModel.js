@@ -100,4 +100,21 @@ module.exports = {
       }
     );
   },
+
+  // Đăng nhập
+    login: (username, passwords, callback) => {
+        db.query(
+        "SELECT * FROM users WHERE username = ? AND passwords = ?",
+        [username, passwords],
+        (err, rows) => {
+            if (err) return callback(err);
+            if (rows.length === 0) {
+            // Không tìm thấy user
+            return callback(null, { success: false, message: "Không tìm thấy người dùng" });
+            }
+            // Trả về thông tin người dùng
+            callback(null, { success: true, user: rows[0] });
+        }
+        );
+    },
 };

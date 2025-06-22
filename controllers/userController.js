@@ -107,3 +107,19 @@ exports.registerUser = (req, res) => {
       .json({ message: "Đăng ký thành công", userId: result.insertId });
   });
 };
+
+exports.loginUser = (req, res) => {
+  const { username, passwords } = req.body;
+  User.login(username, passwords, (err, user) => {
+    if (err) {
+      console.error("Lỗi đăng nhập:", err);
+      return res.status(500).json({ error: "Lỗi server" });
+    }
+    if (!user) {
+      return res.status(401).json({ error: "Sai tài khoản hoặc mật khẩu" });
+    }
+    res.status(200).json({ message: "Đăng nhập thành công", user });
+  });
+};
+
+
